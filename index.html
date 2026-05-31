@@ -36,14 +36,15 @@
     .status-coracoes { font-size: 1.5rem; margin-top: 10px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; }
 
     .area-botoes { display: flex; align-items: center; gap: 15px; }
-    .btn-fullscreen {
-      background: #444; color: #fff; border: 3px solid #fff; padding: 10px 15px;
+    .btn-acao {
+      background: #444; color: #fff; border: 3px solid #fff; padding: 8px 12px;
       font-size: 0.7rem; cursor: pointer; text-transform: uppercase; border-radius: 4px; transition: 0.2s;
     }
-    .btn-fullscreen:hover { background: var(--mario-yellow); color: #000; border-color: var(--mario-yellow); }
+    .btn-acao:hover { background: var(--mario-yellow); color: #000; border-color: var(--mario-yellow); }
+    
     .comandos-teclado { font-size: 0.6rem; color: #888; margin-top: 12px; }
 
-    /* O CONTAINER DO MAPA (VIEWPORT) */
+    /* VIEWPORT DO MAPA */
     .viewport-mapa {
       width: 100%; max-width: 1200px; height: 68vh; min-height: 450px;
       border: 8px solid #000; overflow: hidden; 
@@ -55,10 +56,10 @@
     }
     .viewport-mapa:active { cursor: grabbing; } 
 
-    /* O MUNDO GIGANTE */
+    /* MUNDO GIGANTE */
     .mundo-global { width: 3000px; height: 1800px; position: relative; }
 
-    /* OS BIOMAS */
+    /* BIOMAS */
     .ilha { position: absolute; border-radius: 40% 50% 45% 55%; box-shadow: inset -10px -10px 0 rgba(0,0,0,0.1), 0 15px 0 rgba(0,0,0,0.3); }
     .ilha-grama { left: 50px; top: 150px; width: 700px; height: 500px; background: var(--grama-topo); border-bottom: 30px solid var(--grama-base); border-right: 10px solid var(--grama-base); }
     .ilha-bosque { left: 800px; top: 50px; width: 950px; height: 750px; background: var(--outono-topo); border-bottom: 30px solid var(--outono-base); border-right: 10px solid var(--outono-base); border-radius: 40% 55% 50% 45%; }
@@ -111,15 +112,22 @@
       font-size: 0.8rem; z-index: 10; text-transform: uppercase; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
     }
 
-    /* MODAL DE PARTITURA */
+    /* MODAL DE PARTITURA BLINDADO (Não some da tela) */
     .modal-partitura { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     .modal-partitura.aberto { display: flex; }
     
     .caixa-partitura { 
-      background: #fff; width: 90%; max-width: 900px; height: 60vh; border: 8px solid #000;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border-radius: 8px; overflow: hidden;
+      background: #fff; width: 90%; max-width: 900px; height: 60vh; min-height: 400px;
+      border: 8px solid #000; display: flex; align-items: center; justify-content: center; 
+      margin-bottom: 25px; border-radius: 8px; overflow: hidden; position: relative;
     }
+    
     #imagem-fase { width: 100%; height: 100%; object-fit: contain; }
+    
+    /* Caixa de erro que segura o tamanho se a imagem falhar */
+    #caixa-erro { display: none; text-align: center; color: #000; font-family: sans-serif; padding: 20px; }
+    #caixa-erro h3 { color: #e80000; margin-bottom: 10px; font-size: 1.5rem; }
+    #caixa-erro code { background: #eee; padding: 5px 10px; font-size: 1.2rem; display: inline-block; margin: 15px 0; border: 1px solid #ccc; }
 
     .controles-mestre { display: flex; gap: 20px; }
     .btn-mestre { padding: 15px 30px; font-size: 1rem; border: 4px solid #fff; cursor: pointer; text-transform: uppercase; border-radius: 8px; font-weight: bold;}
@@ -139,6 +147,7 @@
         <p id="hud-mundo" style="color:#aaa; font-size:0.6rem; margin-top:5px;">MUNDO 1: O DESPERTAR</p>
       </div>
       <div class="area-botoes">
+        <button class="btn-acao" id="btn-desbloquear" onclick="desbloquearTudo()" title="Liberar mapa para o professor">🔓 MODO PROFESSOR</button>
         <button class="btn-fullscreen" onclick="ativarTelaCheia()">📺 TELA CHEIA</button>
         <div>
           <span style="font-size: 0.8rem;">VIDAS:</span>
@@ -193,9 +202,20 @@
 
   <div class="modal-partitura" id="modal-batalha">
     <h2 id="batalha-titulo" style="margin-bottom: 20px; color: var(--mario-yellow);">STAGE START</h2>
+    
     <div class="caixa-partitura" id="espaco-partitura">
-      <img id="imagem-fase" src="" alt="Partitura" onerror="this.src='https://via.placeholder.com/800x400.png?text=Imagem+Nao+Encontrada.+Verifique+o+Nome+no+GitHub!'">
+      <img id="imagem-fase" src="" alt="Partitura" 
+           onload="this.style.display='block'; document.getElementById('caixa-erro').style.display='none';" 
+           onerror="this.style.display='none'; document.getElementById('caixa-erro').style.display='block';">
+      
+      <div id="caixa-erro">
+        <h3>⚠️ Partitura Não Encontrada</h3>
+        <p>O jogo procurou no GitHub pelo arquivo exato abaixo:</p>
+        <code id="erro-nome-arquivo"></code>
+        <p>Verifique se você fez o upload desta imagem na mesma pasta e se o nome está idêntico (letras minúsculas e sem acentos).</p>
+      </div>
     </div>
+
     <div class="controles-mestre">
       <button class="btn-mestre btn-erro" onclick="mestreComputarErro()">❌ MISS</button>
       <button class="btn-mestre btn-sucesso" onclick="mestreComputarVitoria()">👑 CLEAR</button>
@@ -204,14 +224,10 @@
   </div>
 
   <script>
-    // ARQUIVOS CONFIGURADOS EXATAMENTE EM MINÚSCULAS COMO ESTÃO NO SEU GITHUB
     const todasFases = [
-      // MUNDO 1: O Despertar (Sol)
       { nome: "Joao Cacador", nota: "Sol", icone: "🦁", x: 200, y: 400, mundo: "Mundo 1: O Despertar", imagem: "joao cacador.png" },
       { nome: "Marcelo e a flauta", nota: "Sol", icone: "👦", x: 350, y: 250, mundo: "Mundo 1: O Despertar", imagem: "marcelo e a flauta.png" },
       { nome: "Cima do piano", nota: "Sol", icone: "🎹", x: 550, y: 350, mundo: "Mundo 1: O Despertar", imagem: "cima do piano.png" },
-      
-      // MUNDO 2: O Salto (Mi)
       { nome: "O grilo", nota: "Mi", icone: "🦗", x: 850, y: 300, mundo: "Mundo 2: O Salto", imagem: "o grilo.png" },
       { nome: "Leo e o chapeu", nota: "Mi", icone: "🎩", x: 1050, y: 200, mundo: "Mundo 2: O Salto", imagem: "leo e o chapeu.png" },
       { nome: "Serra, serrador", nota: "Mi", icone: "🪚", x: 1300, y: 250, mundo: "Mundo 2: O Salto", imagem: "serra serra serrador.png" },
@@ -219,23 +235,15 @@
       { nome: "Uni, duni, te", nota: "Mi", icone: "🍦", x: 1650, y: 350, mundo: "Mundo 2: O Salto", imagem: "uni duni te.png" },
       { nome: "Rei, capitao", nota: "Mi", icone: "👑", x: 1500, y: 500, mundo: "Mundo 2: O Salto", imagem: "rei capitao.png" },
       { nome: "Gatinho Mimi", nota: "Mi", icone: "🐱", x: 1250, y: 600, mundo: "Mundo 2: O Salto", imagem: "gatinho mimi.png" },
-      
-      // MUNDO 3: A Nova Melodia (Lá)
       { nome: "Tique, taque", nota: "La", icone: "🌟", x: 1850, y: 450, mundo: "Mundo 3: A Nova Melodia", imagem: "tique taque carambola.png" },
       { nome: "Toque, toque", nota: "La", icone: "🏃", x: 2200, y: 300, mundo: "Mundo 3: A Nova Melodia", imagem: "toque toque.png" },
-      
-      // MUNDO 4: Novos Desafios (Fá e Ré)
       { nome: "Din don", nota: "Fa", icone: "🔔", x: 2500, y: 600, mundo: "Mundo 4: Novos Desafios", imagem: "din don.png" },
       { nome: "Poc, poc, poc", nota: "Re", icone: "🐎", x: 2600, y: 1100, mundo: "Mundo 4: Novos Desafios", imagem: "poc poc poc.png" },
       { nome: "O meu relogio", nota: "Re", icone: "⏰", x: 2300, y: 1350, mundo: "Mundo 4: Novos Desafios", imagem: "o meu relogio.png" },
-      
-      // MUNDO 5: Os Graves (Dó Grave)
       { nome: "Guten Morgen", nota: "Do G.", icone: "🌄", x: 1950, y: 1400, mundo: "Mundo 5: Os Graves", imagem: "guten morgen.png" },
       { nome: "O pastorzinho", nota: "Do G.", icone: "🐑", x: 1650, y: 1450, mundo: "Mundo 5: Os Graves", imagem: "o pastorzinho.png" },
       { nome: "Hanschen Klein", nota: "Do G.", icone: "🎶", x: 1450, y: 1200, mundo: "Mundo 5: Os Graves", imagem: "hanschen klein.png" },
       { nome: "Alegria", nota: "Do G.", icone: "✨", x: 1200, y: 1350, mundo: "Mundo 5: Os Graves", imagem: "alegria.png" },
-      
-      // MUNDO 6: Os Clássicos (Si)
       { nome: "Os tres patinhos", nota: "Si", icone: "🦆", x: 950, y: 1300, mundo: "Mundo 6: Os Classicos", imagem: "os tres patinhos.png" },
       { nome: "Cai cai balao", nota: "Si", icone: "🎈", x: 750, y: 1150, mundo: "Mundo 6: Os Classicos", imagem: "cai cai balao.png" },
       { nome: "Que e da Margarida?", nota: "Si", icone: "🌼", x: 600, y: 1400, mundo: "Mundo 6: Os Classicos", imagem: "que e da margarida.png" },
@@ -244,8 +252,9 @@
       { nome: "Bate o sino", nota: "Si", icone: "🎄", x: 150, y: 1000, mundo: "Mundo 6: Os Classicos", imagem: "bate o sino.png" }
     ];
 
-    let progressoMaximo = 0; 
-    let faseSelecionada = 0; 
+    // MEMÓRIA INTELIGENTE: Puxa o progresso salvo na máquina
+    let progressoMaximo = parseInt(localStorage.getItem('progressoMundoFlauteando')) || 0; 
+    let faseSelecionada = progressoMaximo; // O avatar inicia na fase mais longe que a turma chegou
     let coracoes = 3;
 
     window.onload = function() {
@@ -292,13 +301,18 @@
 
         if (idx > progressoMaximo) {
           nodo.classList.add("bloqueada"); 
-        } else {
-          nodo.onclick = () => {
-            faseSelecionada = idx;
-            atualizarAvatarHUD(false); 
-            abrirBatalha(fase, idx);
-          };
         }
+        
+        // A Clicagem das Fases nunca deve quebrar. O professor clica e a fase carrega.
+        nodo.onclick = () => {
+          if (idx > progressoMaximo) {
+             const querPular = confirm("Esta fase ainda está bloqueada. Deseja abri-la mesmo assim no Modo Professor?");
+             if (!querPular) return;
+          }
+          faseSelecionada = idx;
+          atualizarAvatarHUD(false); 
+          abrirBatalha(fase, idx);
+        };
         container.appendChild(nodo);
       });
 
@@ -326,11 +340,13 @@
       document.getElementById("tela-projetor").className = (numeroDaFase % 2 === 0) ? "modo-azul" : "modo-padrao";
 
       if (deveFocar) {
-        viewport.scrollTo({
-          left: faseAtual.x - (viewport.offsetWidth / 2),
-          top: faseAtual.y - (viewport.offsetHeight / 2),
-          behavior: 'smooth'
-        });
+        try {
+          viewport.scrollTo({
+            left: faseAtual.x - (viewport.offsetWidth / 2),
+            top: faseAtual.y - (viewport.offsetHeight / 2),
+            behavior: 'smooth'
+          });
+        } catch (e) {}
       }
     }
 
@@ -368,7 +384,7 @@
 
       if (["ArrowRight", "ArrowUp"].includes(e.key)) {
         e.preventDefault(); 
-        if (faseSelecionada < progressoMaximo) {
+        if (faseSelecionada < todasFases.length - 1) { // Professor pode navegar livremente
           faseSelecionada++;
           atualizarAvatarHUD(true);
         }
@@ -395,9 +411,25 @@
       }
     }
 
+    // BOTÃO PARA LIBERAR TODO O MAPA (Para o professor não precisar jogar tudo de novo)
+    function desbloquearTudo() {
+      const confirmar = confirm("Deseja desbloquear todo o mapa permanentemente no seu computador?");
+      if (confirmar) {
+        progressoMaximo = todasFases.length - 1;
+        localStorage.setItem('progressoMundoFlauteando', progressoMaximo);
+        renderizarMapaCompleto();
+        alert("Mapa 100% Desbloqueado!");
+      }
+    }
+
     function abrirBatalha(fase, idx) {
       document.getElementById("batalha-titulo").innerText = `FASE ${idx + 1}: ${fase.nome}`;
-      document.getElementById("imagem-fase").src = fase.imagem;
+      document.getElementById("erro-nome-arquivo").innerText = fase.imagem; // Mostra na tela o nome se falhar
+      
+      const img = document.getElementById("imagem-fase");
+      // O encodeURI resolve os espaços do link automaticamente no GitHub
+      img.src = encodeURI(fase.imagem);
+      
       document.getElementById("modal-batalha").classList.add("aberto");
     }
 
@@ -407,9 +439,11 @@
 
     function mestreComputarErro() {
       coracoes--;
+      
       if (coracoes <= 0) {
         document.getElementById("modal-batalha").classList.remove("aberto");
         progressoMaximo = Math.max(0, progressoMaximo - 2);
+        localStorage.setItem('progressoMundoFlauteando', progressoMaximo); // Salva o recuo
         faseSelecionada = progressoMaximo; 
         coracoes = 3;
         alert("GAME OVER! A Orquestra recuou no mapa!");
@@ -421,10 +455,12 @@
 
     function mestreComputarVitoria() {
       document.getElementById("modal-batalha").classList.remove("aberto");
-      if (faseSelecionada === progressoMaximo) {
+      
+      if (faseSelecionada >= progressoMaximo) {
         if (progressoMaximo < todasFases.length - 1) {
-          progressoMaximo++;
-          faseSelecionada++;
+          progressoMaximo = faseSelecionada + 1;
+          localStorage.setItem('progressoMundoFlauteando', progressoMaximo); // Salva o progresso novo!
+          faseSelecionada = progressoMaximo;
           coracoes = 3; 
           renderizarMapaCompleto(); 
         } else {
