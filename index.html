@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mundo Flauteando - 6 Biomas SNES (Versão Definitiva)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CORES E BIOMAS DO JOGO */
+    :root {
+      --oceano: #3388ff;
+      --grama-topo: #4ca04c; --grama-base: #2e5c2e;
+      --outono-topo: #d97b29; --outono-base: #a65111;
+      --areia-topo: #e6c27a; --areia-base: #b38b4d;
+      --neve-topo: #e0f7fa; --neve-base: #80deea;
+      --pedra-topo: #9aa4b5; --pedra-base: #5a6375;
+      --vulcao-topo: #3b3a3a; --vulcao-base: #1c1c1c;
+      
+      --mario-yellow: #ffe800; --mario-blue: #0078f8;
+      --bg-azul-projetor: #002050; --bg-padrao-projetor: #111;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Press Start 2P', cursive; }
+    body { background: var(--bg-padrao-projetor); color: #fff; overflow-x: hidden; }
+
+    #tela-projetor { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; transition: background 0.8s ease; }
+    .modo-padrao { background: var(--bg-padrao-projetor); }
+    .modo-azul { background: var(--bg-azul-projetor); }
+
+    /* CABEÇALHO E BOTÕES */
+    header {
+      width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+      background: #000; border: 4px solid #fff; padding: 15px 20px; margin-bottom: 20px; z-index: 10;
+    }
+    .info-grupo h1 { font-size: 1.2rem; color: var(--mario-yellow); line-height: 1.5; }
+    .status-coracoes { font-size: 1.5rem; margin-top: 10px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; }
+
+    .area-botoes { display: flex; align-items: center; gap: 15px; }
+    .btn-acao {
+      background: #444; color: #fff; border: 3px solid #fff; padding: 10px 15px;
+      font-size: 0.7rem; cursor: pointer; text-transform: uppercase; border-radius: 4px; transition: 0.2s;
+    }
+    .btn-acao:hover { background: var(--mario-yellow); color: #000; border-color: var(--mario-yellow); }
+    .btn-destaque { background: var(--mario-blue); border-color: #fff; }
+    .btn-destaque:hover { background: #fff; color: var(--mario-blue); }
+
+    .comandos-teclado { font-size: 0.6rem; color: #888; margin-top: 12px; }
+
+    /* CONTAINER DO MAPA */
+    .viewport-mapa {
+      width: 100%; max-width: 1200px; height: 68vh; min-height: 450px;
+      border: 8px solid #000; overflow: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      background: var(--oceano);
+      background-image: radial-gradient(rgba(255,255,255,0.2) 10%, transparent 11%), radial-gradient(rgba(255,255,255,0.2) 10%, transparent 11%);
+      background-size: 60px 60px; background-position: 0 0, 30px 30px; scroll-behavior: smooth;
+    }
+
+    .mundo-global { width: 3000px; height: 1800px; position: relative; }
+
+    /* BIOMAS */
+    .ilha { position: absolute; box-shadow: inset -10px -10px 0 rgba(0,0,0,0.1), 0 15px 0 rgba(0,0,0,0.3); }
+    .ilha-grama { left: 50px; top: 150px; width: 700px; height: 500px; background: var(--grama-topo); border-bottom: 30px solid var(--grama-base); border-right: 10px solid var(--grama-base); border-radius: 40% 50% 45% 55%; }
+    .ilha-bosque { left: 800px; top: 50px; width: 950px; height: 750px; background: var(--outono-topo); border-bottom: 30px solid var(--outono-base); border-right: 10px solid var(--outono-base); border-radius: 40% 55% 50% 45%; }
+    .ilha-deserto { left: 1800px; top: 150px; width: 800px; height: 600px; background: var(--areia-topo); border-bottom: 30px solid var(--areia-base); border-right: 10px solid var(--areia-base); border-radius: 50% 40% 60% 45%; }
+    .ilha-neve { left: 2100px; top: 500px; width: 800px; height: 1100px; background: var(--neve-topo); border-bottom: 30px solid var(--neve-base); border-right: 10px solid var(--neve-base); border-radius: 40% 50% 60% 45%; }
+    .ilha-pedra { left: 1100px; top: 1000px; width: 1000px; height: 700px; background: var(--pedra-topo); border-bottom: 30px solid var(--pedra-base); border-right: 10px solid var(--pedra-base); border-radius: 45% 55% 40% 50%; }
+    .ilha-vulcao { left: 50px; top: 850px; width: 1050px; height: 850px; background: var(--vulcao-topo); border-bottom: 30px solid var(--vulcao-base); border-right: 10px solid var(--vulcao-base); border-radius: 55% 45% 40% 50%; }
+
+    .titulo-bioma { position: absolute; font-size: 1.2rem; color: #fff; z-index: 5; text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000; text-align: center; line-height: 1.6; }
+    .titulo-nota { font-size: 0.8rem; color: var(--mario-yellow); }
+
+    /* PONTES */
+    .ponte { position: absolute; background: #8b5a2b; border: 4px dashed #5c3a18; z-index: 1; box-shadow: 0 10px 0 rgba(0,0,0,0.5); }
+    .p1 { left: 700px; top: 350px; width: 150px; height: 60px; transform: rotate(-15deg); }
+    .p2 { left: 1700px; top: 250px; width: 150px; height: 60px; transform: rotate(15deg); }
+    .p3 { left: 2350px; top: 700px; width: 60px; height: 150px; transform: rotate(-20deg); }
+    .p4 { left: 2050px; top: 1350px; width: 120px; height: 60px; transform: rotate(10deg); }
+    .p5 { left: 1050px; top: 1300px; width: 100px; height: 60px; transform: rotate(-10deg); }
+
+    /* ESTRADA E FASES */
+    #svg-estrada { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+    
+    .fase-nodo { position: absolute; z-index: 4; width: 28px; height: 28px; background: var(--mario-yellow); border: 4px solid #000; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 2px 4px 0px rgba(0,0,0,0.5); }
+    .fase-nodo.fase-par { background: var(--mario-blue); }
+
+    /* BLINDAGEM DE FONTES (Garante que os emojis não sumam) */
+    .icone-fase {
+      position: absolute; top: -45px; left: 50%; transform: translateX(-50%); font-size: 2rem;
+      filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.8)); pointer-events: none; transition: 0.3s;
+      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif !important;
+    }
+    .fase-nodo:hover .icone-fase { transform: translateX(-50%) scale(1.4); z-index: 10; }
+    .fase-nodo.bloqueada { background: #555; }
+    .fase-nodo.bloqueada .icone-fase { filter: grayscale(100%) brightness(30%); }
+    .fase-nodo.selecionada { animation: piscarMario 0.4s infinite alternate; z-index: 5; }
+
+    @keyframes piscarMario {
+      0% { border-color: #fff; transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 10px #fff; }
+      100% { border-color: #000; transform: translate(-50%, -50%) scale(1.4); box-shadow: 0 0 20px #fff; }
+    }
+
+    #avatar-jogador {
+      position: absolute; z-index: 6; font-size: 2.5rem; transform: translate(-50%, -100%);
+      transition: all 0.3s ease-in-out; pointer-events: none; filter: drop-shadow(3px 3px 0px black);
+      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif !important;
+    }
+    
+    .nome-fase-hud {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #000; border: 4px solid #fff; padding: 10px 20px; color: #fff;
+      font-size: 0.8rem; z-index: 10; text-transform: uppercase; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+    }
+
+    /* MODAL DE BATALHA COM IMAGENS */
+    .modal-partitura { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .modal-partitura.aberto { display: flex; }
+    
+    .caixa-partitura { 
+      background: #fff; width: 90%; max-width: 900px; height: 60vh; 
+      border: 8px solid #000; display: flex; align-items: center; justify-content: center; 
+      margin-bottom: 25px; border-radius: 8px; overflow: hidden; position: relative;
+    }
+    
+    #imagem-fase { width: 100%; height: 100%; object-fit: contain; }
+    #texto-aviso-imagem { position: absolute; color: #000; font-family: sans-serif; text-align: center; padding: 20px; display: none; }
+
+    .controles-mestre { display: flex; gap: 20px; }
+    .btn-mestre { padding: 15px 30px; font-size: 1rem; border: 4px solid #fff; cursor: pointer; text-transform: uppercase; border-radius: 8px; font-weight: bold;}
+    .btn-sucesso { background: #388700; color: white; }
+    .btn-erro { background: #e80000; color: white; }
+    .btn-fechar { background: #444; color: white; margin-left: 30px; }
+
+    .decoracao { position: absolute; font-size: 2.5rem; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5)); z-index: 3; pointer-events: none; user-select: none; font-family: 'Segoe UI Emoji', sans-serif !important; }
+  </style>
+</head>
+<body class="modo-padrao">
+
+  <div id="tela-projetor" class="modo-padrao">
+    
+    <header>
+      <div class="info-grupo">
+        <h1>REINO FLAUTEANDO</h1>
+        <p id="hud-mundo" style="color:#aaa; font-size:0.6rem; margin-top:5px;">MUNDO 1: O DESPERTAR</p>
+      </div>
+      <div class="area-botoes">
+        <input type="file" id="leitor-imagens" multiple accept="image/*" style="display: none;">
+        
+        <button class="btn-acao btn-destaque" onclick="document.getElementById('leitor-imagens').click()">📂 CARREGAR PARTITURAS</button>
+        <button class="btn-acao" onclick="ativarTelaCheia()">📺 TELA CHEIA</button>
+        <div style="margin-left: 10px;">
+          <span style="font-size: 0.8rem;">VIDAS:</span>
+          <div class="status-coracoes" id="exibicao-coracoes">❤️❤️❤️</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="viewport-mapa" id="viewport">
+      <div class="mundo-global">
+        <div class="ponte p1"></div><div class="ponte p2"></div>
+        <div class="ponte p3"></div><div class="ponte p4"></div><div class="ponte p5"></div>
+        
+        <div class="ilha ilha-grama"></div>
+        <div class="ilha ilha-bosque"></div>
+        <div class="ilha ilha-deserto"></div>
+        <div class="ilha ilha-neve"></div>
+        <div class="ilha ilha-pedra"></div>
+        <div class="ilha ilha-vulcao"></div>
+
+        <div class="titulo-bioma" style="left: 150px; top: 180px;">MUNDO 1: O DESPERTAR<br><span class="titulo-nota">(NOTA SOL)</span></div>
+        <div class="titulo-bioma" style="left: 1100px; top: 80px;">MUNDO 2: O SALTO<br><span class="titulo-nota">(NOTA MI)</span></div>
+        <div class="titulo-bioma" style="left: 2000px; top: 180px;">MUNDO 3: A NOVA MELODIA<br><span class="titulo-nota">(NOTA LÁ)</span></div>
+        <div class="titulo-bioma" style="left: 2400px; top: 1000px;">MUNDO 4: NOVOS DESAFIOS<br><span class="titulo-nota">(NOTAS FÁ E RÉ)</span></div>
+        <div class="titulo-bioma" style="left: 1450px; top: 1050px;">MUNDO 5: OS GRAVES<br><span class="titulo-nota">(NOTA DÓ GRAVE)</span></div>
+        <div class="titulo-bioma" style="left: 300px; top: 880px;">MUNDO 6: OS CLÁSSICOS<br><span class="titulo-nota">(NOTA SI)</span></div>
+
+        <div class="decoracao" style="left: 100px; top: 400px;">🌲</div><div class="decoracao" style="left: 500px; top: 200px;">🌲</div>
+        <div class="decoracao" style="left: 1000px; top: 400px;">🍂</div><div class="decoracao" style="left: 1600px; top: 600px;">🍄</div>
+        <div class="decoracao" style="left: 1900px; top: 300px;">🌵</div><div class="decoracao" style="left: 2400px; top: 500px;">🏜️</div>
+        <div class="decoracao" style="left: 2200px; top: 1200px;">⛄</div><div class="decoracao" style="left: 2700px; top: 1400px;">❄️</div>
+        <div class="decoracao" style="left: 1200px; top: 1500px;">⛰️</div><div class="decoracao" style="left: 1800px; top: 1200px;">⛰️</div>
+        <div class="decoracao" style="left: 150px; top: 1500px;">🏰</div><div class="decoracao" style="left: 800px; top: 1400px;">🔥</div>
+
+        <svg id="svg-estrada" viewBox="0 0 3000 1800" width="3000" height="1800">
+          <path id="caminho-fundo" fill="transparent" stroke="rgba(0,0,0,0.4)" stroke-width="12" stroke-dasharray="15, 12"></path>
+          <path id="caminho-ativo" fill="transparent" stroke="#ffe800" stroke-width="12" stroke-dasharray="15, 12"></path>
+        </svg>
+
+        <div id="nodos-container"></div>
+        <div id="avatar-jogador">🪈</div>
+      </div>
+    </div>
+
+    <div style="position: relative; width: 100%; max-width: 1200px; text-align: center;">
+      <div class="nome-fase-hud" id="hud-nome-fase" style="bottom: 0;">JOAO CACADOR</div>
+    </div>
+    
+    <div class="comandos-teclado">
+      [SETAS]: Andar pelo Mapa | [ENTER] ou [CLIQUE]: Entrar na Fase
+    </div>
+  </div>
+
+  <div class="modal-partitura" id="modal-batalha">
+    <h2 id="batalha-titulo" style="margin-bottom: 20px; color: var(--mario-yellow);">STAGE START</h2>
+    
+    <div class="caixa-partitura" id="espaco-partitura">
+      <img id="imagem-fase" src="" alt="">
+      <div id="texto-aviso-imagem">
+        <h2>Partitura não carregada!</h2>
+        <p>Por favor, feche esta janela, clique no botão azul <b>"CARREGAR PARTITURAS"</b> no topo da tela e selecione a imagem dessa música no seu computador.</p>
+      </div>
+    </div>
+
+    <div class="controles-mestre">
+      <button class="btn-mestre btn-erro" onclick="mestreComputarErro()">❌ MISS</button>
+      <button class="btn-mestre btn-sucesso" onclick="mestreComputarVitoria()">👑 CLEAR</button>
+      <button class="btn-mestre btn-fechar" onclick="fecharBatalha()">🔙 VOLTAR</button>
+    </div>
+  </div>
+
+  <script>
+    // SISTEMA MÁGICO DE MEMORIZAÇÃO DE IMAGENS
+    const imagensMemoria = {};
+
+    // Função que simplifica os nomes (ex: "O Grilo.png" vira "ogrilo") para garantir que o jogo sempre encontre a imagem
+    function simplificarNome(nome) {
+      return nome.toLowerCase().replace(/\.png|\.jpg|\.jpeg/g, '').replace(/[^a-z0-9]/g, '');
+    }
+
+    document.getElementById('leitor-imagens').addEventListener('change', function(e) {
+      const arquivos = e.target.files;
+      for (let i = 0; i < arquivos.length; i++) {
+        const arquivo = arquivos[i];
+        const leitor = new FileReader();
+        leitor.onload = function(evento) {
+          const nomeMapeado = simplificarNome(arquivo.name);
+          imagensMemoria[nomeMapeado] = evento.target.result; // Salva a imagem na memória do jogo!
+        }
+        leitor.readAsDataURL(arquivo);
+      }
+      alert("Sucesso! As " + arquivos.length + " partituras foram carregadas na memória do jogo.");
+    });
+
+    const todasFases = [
+      { nome: "Joao Cacador", nota: "Sol", icone: "🦁", x: 200, y: 400, mundo: "Mundo 1: O Despertar", idImagem: "joaocacador" },
+      { nome: "Marcelo e a flauta", nota: "Sol", icone: "👦", x: 350, y: 250, mundo: "Mundo 1: O Despertar", idImagem: "marceloeaflauta" },
+      { nome: "Cima do piano", nota: "Sol", icone: "🎹", x: 550, y: 350, mundo: "Mundo 1: O Despertar", idImagem: "cimadopiano" },
+      { nome: "O grilo", nota: "Mi", icone: "🦗", x: 850, y: 300, mundo: "Mundo 2: O Salto", idImagem: "ogrilo" },
+      { nome: "Leo e o chapeu", nota: "Mi", icone: "🎩", x: 1050, y: 200, mundo: "Mundo 2: O Salto", idImagem: "leoeochapeu" },
+      { nome: "Serra, serrador", nota: "Mi", icone: "🪚", x: 1300, y: 250, mundo: "Mundo 2: O Salto", idImagem: "serraserraserrador" },
+      { nome: "Joao Ratao", nota: "Mi", icone: "🐭", x: 1500, y: 150, mundo: "Mundo 2: O Salto", idImagem: "joaoratao" },
+      { nome: "Uni, duni, te", nota: "Mi", icone: "🍦", x: 1650, y: 350, mundo: "Mundo 2: O Salto", idImagem: "unidunite" },
+      { nome: "Rei, capitao", nota: "Mi", icone: "👑", x: 1500, y: 500, mundo: "Mundo 2: O Salto", idImagem: "reicapitao" },
+      { nome: "Gatinho Mimi", nota: "Mi", icone: "🐱", x: 1250, y: 600, mundo: "Mundo 2: O Salto", idImagem: "gatinhomimi" },
+      { nome: "Tique, taque", nota: "La", icone: "🌟", x: 1850, y: 450, mundo: "Mundo 3: A Nova Melodia", idImagem: "tiquetaquecarambola" },
+      { nome: "Toque, toque", nota: "La", icone: "🏃", x: 2200, y: 300, mundo: "Mundo 3: A Nova Melodia", idImagem: "toquetoque" },
+      { nome: "Din don", nota: "Fa", icone: "🔔", x: 2500, y: 600, mundo: "Mundo 4: Novos Desafios", idImagem: "dindon" },
+      { nome: "Poc, poc, poc", nota: "Re", icone: "🐎", x: 2600, y: 1100, mundo: "Mundo 4: Novos Desafios", idImagem: "pocpocpoc" },
+      { nome: "O meu relogio", nota: "Re", icone: "⏰", x: 2300, y: 1350, mundo: "Mundo 4: Novos Desafios", idImagem: "omeurelogio" },
+      { nome: "Guten Morgen", nota: "Do G.", icone: "🌄", x: 1950, y: 1400, mundo: "Mundo 5: Os Graves", idImagem: "gutenmorgen" },
+      { nome: "O pastorzinho", nota: "Do G.", icone: "🐑", x: 1650, y: 1450, mundo: "Mundo 5: Os Graves", idImagem: "opastorzinho" },
+      { nome: "Hanschen Klein", nota: "Do G.", icone: "🎶", x: 1450, y: 1200, mundo: "Mundo 5: Os Graves", idImagem: "hanschenklein" },
+      { nome: "Alegria", nota: "Do G.", icone: "✨", x: 1200, y: 1350, mundo: "Mundo 5: Os Graves", idImagem: "alegria" },
+      { nome: "Os tres patinhos", nota: "Si", icone: "🦆", x: 950, y: 1300, mundo: "Mundo 6: Os Classicos", idImagem: "ostrespatinhos" },
+      { nome: "Cai cai balao", nota: "Si", icone: "🎈", x: 750, y: 1150, mundo: "Mundo 6: Os Classicos", idImagem: "caicaibalao" },
+      { nome: "Que e da Margarida?", nota: "Si", icone: "🌼", x: 600, y: 1400, mundo: "Mundo 6: Os Classicos", idImagem: "queedamargarida" },
+      { nome: "Mary had a lamb", nota: "Si", icone: "🌾", x: 400, y: 1500, mundo: "Mundo 6: Os Classicos", idImagem: "maryhadalittlelamb" },
+      { nome: "Marcha soldado", nota: "Si", icone: "🪖", x: 250, y: 1300, mundo: "Mundo 6: Os Classicos", idImagem: "marchasoldado" },
+      { nome: "Bate o sino", nota: "Si", icone: "🎄", x: 150, y: 1000, mundo: "Mundo 6: Os Classicos", idImagem: "bateosino" }
+    ];
+
+    let progressoMaximo = 0; 
+    let faseSelecionada = 0; 
+    let coracoes = 3;
+
+    window.onload = renderizarMapaCompleto;
+
+    function renderizarMapaCompleto() {
+      const container = document.getElementById("nodos-container");
+      const pathFundo = document.getElementById("caminho-fundo");
+      const pathAtivo = document.getElementById("caminho-ativo");
+      container.innerHTML = ""; 
+
+      let dFundo = `M ${todasFases[0].x} ${todasFases[0].y}`;
+      let dAtivo = `M ${todasFases[0].x} ${todasFases[0].y}`;
+
+      for (let i = 1; i < todasFases.length; i++) {
+        let prev = todasFases[i-1];
+        let curr = todasFases[i];
+        let midX = (prev.x + curr.x) / 2;
+        let midY = (prev.y + curr.y) / 2 - 30; 
+        
+        dFundo += ` Q ${midX} ${midY} ${curr.x} ${curr.y}`;
+        if (i <= progressoMaximo) {
+          dAtivo += ` Q ${midX} ${midY} ${curr.x} ${curr.y}`;
+        }
+      }
+      pathFundo.setAttribute("d", dFundo);
+      pathAtivo.setAttribute("d", dAtivo);
+
+      todasFases.forEach((fase, idx) => {
+        const nodo = document.createElement("div");
+        nodo.className = "fase-nodo";
+        nodo.id = `nodo-${idx}`;
+        nodo.style.left = `${fase.x}px`;
+        nodo.style.top = `${fase.y}px`;
+
+        if (idx % 2 !== 0) nodo.classList.add("fase-par"); 
+
+        const icone = document.createElement("div");
+        icone.className = "icone-fase";
+        icone.innerHTML = fase.icone;
+        nodo.appendChild(icone);
+
+        if (idx > progressoMaximo) {
+          nodo.classList.add("bloqueada"); 
+        } else {
+          nodo.onclick = () => {
+            faseSelecionada = idx;
+            atualizarAvatarHUD();
+            abrirBatalha(fase, idx);
+          };
+        }
+        container.appendChild(nodo);
+      });
+
+      atualizarAvatarHUD();
+    }
+
+    function atualizarAvatarHUD() {
+      const faseAtual = todasFases[faseSelecionada];
+      const avatar = document.getElementById("avatar-jogador");
+      const viewport = document.getElementById("viewport");
+
+      avatar.style.left = `${faseAtual.x}px`;
+      avatar.style.top = `${faseAtual.y}px`;
+
+      document.getElementById("hud-mundo").innerText = faseAtual.mundo.toUpperCase();
+      document.getElementById("hud-nome-fase").innerText = `FASE ${faseSelecionada + 1}: ${faseAtual.nome}`;
+      document.getElementById("exibicao-coracoes").innerHTML = "❤️".repeat(coracoes) + "🖤".repeat(3 - coracoes);
+
+      document.querySelectorAll('.fase-nodo').forEach((nodo, idx) => {
+        nodo.classList.remove('selecionada');
+        if (idx === faseSelecionada) nodo.classList.add('selecionada');
+      });
+
+      const numeroDaFase = faseSelecionada + 1;
+      document.getElementById("tela-projetor").className = (numeroDaFase % 2 === 0) ? "modo-azul" : "modo-padrao";
+
+      try {
+        viewport.scrollTo({
+          left: faseAtual.x - (viewport.offsetWidth / 2),
+          top: faseAtual.y - (viewport.offsetHeight / 2),
+          behavior: 'smooth'
+        });
+      } catch (e) {}
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById("modal-batalha").classList.contains("aberto")) return;
+
+      if (["ArrowRight", "ArrowUp"].includes(e.key)) {
+        e.preventDefault(); 
+        if (faseSelecionada < progressoMaximo) {
+          faseSelecionada++;
+          atualizarAvatarHUD();
+        }
+      } else if (["ArrowLeft", "ArrowDown"].includes(e.key)) {
+        e.preventDefault();
+        if (faseSelecionada > 0) {
+          faseSelecionada--;
+          atualizarAvatarHUD();
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        abrirBatalha(todasFases[faseSelecionada], faseSelecionada);
+      }
+    });
+
+    function ativarTelaCheia() {
+      const elem = document.documentElement; 
+      if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) { elem.requestFullscreen(); } 
+        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
+        else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } 
+      } else {
+        if (document.exitFullscreen) { document.exitFullscreen(); }
+      }
+    }
+
+    function abrirBatalha(fase, idx) {
+      document.getElementById("batalha-titulo").innerText = `FASE ${idx + 1}: ${fase.nome}`;
+      
+      const imgElement = document.getElementById("imagem-fase");
+      const textoAviso = document.getElementById("texto-aviso-imagem");
+
+      // O jogo procura se você fez o upload da imagem correspondente a esta fase
+      if (imagensMemoria[fase.idImagem]) {
+        imgElement.src = imagensMemoria[fase.idImagem];
+        imgElement.style.display = "block";
+        textoAviso.style.display = "none";
+      } else {
+        // Se a imagem não foi carregada no botão azul, mostra o aviso!
+        imgElement.style.display = "none";
+        textoAviso.style.display = "block";
+      }
+      
+      document.getElementById("modal-batalha").classList.add("aberto");
+    }
+
+    function fecharBatalha() {
+      document.getElementById("modal-batalha").classList.remove("aberto");
+    }
+
+    function mestreComputarErro() {
+      coracoes--;
+      
+      if (coracoes <= 0) {
+        document.getElementById("modal-batalha").classList.remove("aberto");
+        progressoMaximo = Math.max(0, progressoMaximo - 2);
+        faseSelecionada = progressoMaximo; 
+        coracoes = 3;
+        alert("GAME OVER! A Orquestra recuou no mapa!");
+        renderizarMapaCompleto(); 
+      } else {
+        document.getElementById("exibicao-coracoes").innerHTML = "❤️".repeat(coracoes) + "🖤".repeat(3 - coracoes);
+      }
+    }
+
+    function mestreComputarVitoria() {
+      document.getElementById("modal-batalha").classList.remove("aberto");
+      
+      if (faseSelecionada === progressoMaximo) {
+        if (progressoMaximo < todasFases.length - 1) {
+          progressoMaximo++;
+          faseSelecionada++;
+          coracoes = 3; 
+          renderizarMapaCompleto(); 
+        } else {
+          alert("JOGO ZERADO! Vocês dominaram o repertório inteiro da flauta doce!");
+        }
+      } else {
+        faseSelecionada++;
+        atualizarAvatarHUD();
+      }
+    }
+  </script>
+</body>
+</html>
