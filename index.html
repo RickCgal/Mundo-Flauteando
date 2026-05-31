@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Mundo Flauteando - 6 Biomas SNES (Versão Definitiva)</title>
+  <title>Reino Flauteando - RPG Cooperativo</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   
   <style>
@@ -21,13 +21,13 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Press Start 2P', cursive; }
-    body { background: var(--bg-padrao-projetor); color: #fff; overflow-x: hidden; }
+    body { background: var(--bg-padrao-projetor); color: #fff; overflow-x: hidden; user-select: none; }
 
     #tela-projetor { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; transition: background 0.8s ease; }
     .modo-padrao { background: var(--bg-padrao-projetor); }
     .modo-azul { background: var(--bg-azul-projetor); }
 
-    /* CABEÇALHO E BOTÕES */
+    /* CABEÇALHO */
     header {
       width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
       background: #000; border: 4px solid #fff; padding: 15px 20px; margin-bottom: 20px; z-index: 10;
@@ -36,30 +36,31 @@
     .status-coracoes { font-size: 1.5rem; margin-top: 10px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; }
 
     .area-botoes { display: flex; align-items: center; gap: 15px; }
-    .btn-acao {
+    .btn-fullscreen {
       background: #444; color: #fff; border: 3px solid #fff; padding: 10px 15px;
       font-size: 0.7rem; cursor: pointer; text-transform: uppercase; border-radius: 4px; transition: 0.2s;
     }
-    .btn-acao:hover { background: var(--mario-yellow); color: #000; border-color: var(--mario-yellow); }
-    .btn-destaque { background: var(--mario-blue); border-color: #fff; }
-    .btn-destaque:hover { background: #fff; color: var(--mario-blue); }
-
+    .btn-fullscreen:hover { background: var(--mario-yellow); color: #000; border-color: var(--mario-yellow); }
     .comandos-teclado { font-size: 0.6rem; color: #888; margin-top: 12px; }
 
-    /* CONTAINER DO MAPA */
+    /* O CONTAINER DO MAPA (VIEWPORT) */
     .viewport-mapa {
       width: 100%; max-width: 1200px; height: 68vh; min-height: 450px;
-      border: 8px solid #000; overflow: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 8px solid #000; overflow: hidden; 
+      position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
       background: var(--oceano);
       background-image: radial-gradient(rgba(255,255,255,0.2) 10%, transparent 11%), radial-gradient(rgba(255,255,255,0.2) 10%, transparent 11%);
-      background-size: 60px 60px; background-position: 0 0, 30px 30px; scroll-behavior: smooth;
+      background-size: 60px 60px; background-position: 0 0, 30px 30px;
+      cursor: grab; 
     }
+    .viewport-mapa:active { cursor: grabbing; } 
 
+    /* O MUNDO GIGANTE */
     .mundo-global { width: 3000px; height: 1800px; position: relative; }
 
-    /* BIOMAS */
-    .ilha { position: absolute; box-shadow: inset -10px -10px 0 rgba(0,0,0,0.1), 0 15px 0 rgba(0,0,0,0.3); }
-    .ilha-grama { left: 50px; top: 150px; width: 700px; height: 500px; background: var(--grama-topo); border-bottom: 30px solid var(--grama-base); border-right: 10px solid var(--grama-base); border-radius: 40% 50% 45% 55%; }
+    /* OS BIOMAS */
+    .ilha { position: absolute; border-radius: 40% 50% 45% 55%; box-shadow: inset -10px -10px 0 rgba(0,0,0,0.1), 0 15px 0 rgba(0,0,0,0.3); }
+    .ilha-grama { left: 50px; top: 150px; width: 700px; height: 500px; background: var(--grama-topo); border-bottom: 30px solid var(--grama-base); border-right: 10px solid var(--grama-base); }
     .ilha-bosque { left: 800px; top: 50px; width: 950px; height: 750px; background: var(--outono-topo); border-bottom: 30px solid var(--outono-base); border-right: 10px solid var(--outono-base); border-radius: 40% 55% 50% 45%; }
     .ilha-deserto { left: 1800px; top: 150px; width: 800px; height: 600px; background: var(--areia-topo); border-bottom: 30px solid var(--areia-base); border-right: 10px solid var(--areia-base); border-radius: 50% 40% 60% 45%; }
     .ilha-neve { left: 2100px; top: 500px; width: 800px; height: 1100px; background: var(--neve-topo); border-bottom: 30px solid var(--neve-base); border-right: 10px solid var(--neve-base); border-radius: 40% 50% 60% 45%; }
@@ -83,7 +84,6 @@
     .fase-nodo { position: absolute; z-index: 4; width: 28px; height: 28px; background: var(--mario-yellow); border: 4px solid #000; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 2px 4px 0px rgba(0,0,0,0.5); }
     .fase-nodo.fase-par { background: var(--mario-blue); }
 
-    /* BLINDAGEM DE FONTES (Garante que os emojis não sumam) */
     .icone-fase {
       position: absolute; top: -45px; left: 50%; transform: translateX(-50%); font-size: 2rem;
       filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.8)); pointer-events: none; transition: 0.3s;
@@ -111,18 +111,15 @@
       font-size: 0.8rem; z-index: 10; text-transform: uppercase; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
     }
 
-    /* MODAL DE BATALHA COM IMAGENS */
+    /* MODAL DE PARTITURA */
     .modal-partitura { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     .modal-partitura.aberto { display: flex; }
     
     .caixa-partitura { 
-      background: #fff; width: 90%; max-width: 900px; height: 60vh; 
-      border: 8px solid #000; display: flex; align-items: center; justify-content: center; 
-      margin-bottom: 25px; border-radius: 8px; overflow: hidden; position: relative;
+      background: #fff; width: 90%; max-width: 900px; height: 60vh; border: 8px solid #000;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border-radius: 8px; overflow: hidden;
     }
-    
     #imagem-fase { width: 100%; height: 100%; object-fit: contain; }
-    #texto-aviso-imagem { position: absolute; color: #000; font-family: sans-serif; text-align: center; padding: 20px; display: none; }
 
     .controles-mestre { display: flex; gap: 20px; }
     .btn-mestre { padding: 15px 30px; font-size: 1rem; border: 4px solid #fff; cursor: pointer; text-transform: uppercase; border-radius: 8px; font-weight: bold;}
@@ -136,18 +133,14 @@
 <body class="modo-padrao">
 
   <div id="tela-projetor" class="modo-padrao">
-    
     <header>
       <div class="info-grupo">
         <h1>REINO FLAUTEANDO</h1>
         <p id="hud-mundo" style="color:#aaa; font-size:0.6rem; margin-top:5px;">MUNDO 1: O DESPERTAR</p>
       </div>
       <div class="area-botoes">
-        <input type="file" id="leitor-imagens" multiple accept="image/*" style="display: none;">
-        
-        <button class="btn-acao btn-destaque" onclick="document.getElementById('leitor-imagens').click()">📂 CARREGAR PARTITURAS</button>
-        <button class="btn-acao" onclick="ativarTelaCheia()">📺 TELA CHEIA</button>
-        <div style="margin-left: 10px;">
+        <button class="btn-fullscreen" onclick="ativarTelaCheia()">📺 TELA CHEIA</button>
+        <div>
           <span style="font-size: 0.8rem;">VIDAS:</span>
           <div class="status-coracoes" id="exibicao-coracoes">❤️❤️❤️</div>
         </div>
@@ -155,7 +148,7 @@
     </header>
 
     <div class="viewport-mapa" id="viewport">
-      <div class="mundo-global">
+      <div class="mundo-global" id="mundo-conteudo">
         <div class="ponte p1"></div><div class="ponte p2"></div>
         <div class="ponte p3"></div><div class="ponte p4"></div><div class="ponte p5"></div>
         
@@ -193,86 +186,72 @@
     <div style="position: relative; width: 100%; max-width: 1200px; text-align: center;">
       <div class="nome-fase-hud" id="hud-nome-fase" style="bottom: 0;">JOAO CACADOR</div>
     </div>
-    
     <div class="comandos-teclado">
-      [SETAS]: Andar pelo Mapa | [ENTER] ou [CLIQUE]: Entrar na Fase
+      [ARRASTAR MOUSE]: Olhar o Mapa | [SETAS]: Mover Avatar | [ENTER]: Entrar na Fase
     </div>
   </div>
 
   <div class="modal-partitura" id="modal-batalha">
     <h2 id="batalha-titulo" style="margin-bottom: 20px; color: var(--mario-yellow);">STAGE START</h2>
-    
     <div class="caixa-partitura" id="espaco-partitura">
-      <img id="imagem-fase" src="" alt="">
-      <div id="texto-aviso-imagem">
-        <h2>Partitura não carregada!</h2>
-        <p>Por favor, feche esta janela, clique no botão azul <b>"CARREGAR PARTITURAS"</b> no topo da tela e selecione a imagem dessa música no seu computador.</p>
-      </div>
+      <img id="imagem-fase" src="" alt="Partitura" onerror="this.src='https://via.placeholder.com/800x400.png?text=Imagem+Nao+Encontrada.+Verifique+o+Nome+no+GitHub!'">
     </div>
-
     <div class="controles-mestre">
       <button class="btn-mestre btn-erro" onclick="mestreComputarErro()">❌ MISS</button>
       <button class="btn-mestre btn-sucesso" onclick="mestreComputarVitoria()">👑 CLEAR</button>
-      <button class="btn-mestre btn-fechar" onclick="fecharBatalha()">🔙 VOLTAR</button>
+      <button class="btn-fechar btn-mestre" onclick="fecharBatalha()">🔙 VOLTAR</button>
     </div>
   </div>
 
   <script>
-    // SISTEMA MÁGICO DE MEMORIZAÇÃO DE IMAGENS
-    const imagensMemoria = {};
-
-    // Função que simplifica os nomes (ex: "O Grilo.png" vira "ogrilo") para garantir que o jogo sempre encontre a imagem
-    function simplificarNome(nome) {
-      return nome.toLowerCase().replace(/\.png|\.jpg|\.jpeg/g, '').replace(/[^a-z0-9]/g, '');
-    }
-
-    document.getElementById('leitor-imagens').addEventListener('change', function(e) {
-      const arquivos = e.target.files;
-      for (let i = 0; i < arquivos.length; i++) {
-        const arquivo = arquivos[i];
-        const leitor = new FileReader();
-        leitor.onload = function(evento) {
-          const nomeMapeado = simplificarNome(arquivo.name);
-          imagensMemoria[nomeMapeado] = evento.target.result; // Salva a imagem na memória do jogo!
-        }
-        leitor.readAsDataURL(arquivo);
-      }
-      alert("Sucesso! As " + arquivos.length + " partituras foram carregadas na memória do jogo.");
-    });
-
+    // ARQUIVOS CONFIGURADOS EXATAMENTE EM MINÚSCULAS COMO ESTÃO NO SEU GITHUB
     const todasFases = [
-      { nome: "Joao Cacador", nota: "Sol", icone: "🦁", x: 200, y: 400, mundo: "Mundo 1: O Despertar", idImagem: "joaocacador" },
-      { nome: "Marcelo e a flauta", nota: "Sol", icone: "👦", x: 350, y: 250, mundo: "Mundo 1: O Despertar", idImagem: "marceloeaflauta" },
-      { nome: "Cima do piano", nota: "Sol", icone: "🎹", x: 550, y: 350, mundo: "Mundo 1: O Despertar", idImagem: "cimadopiano" },
-      { nome: "O grilo", nota: "Mi", icone: "🦗", x: 850, y: 300, mundo: "Mundo 2: O Salto", idImagem: "ogrilo" },
-      { nome: "Leo e o chapeu", nota: "Mi", icone: "🎩", x: 1050, y: 200, mundo: "Mundo 2: O Salto", idImagem: "leoeochapeu" },
-      { nome: "Serra, serrador", nota: "Mi", icone: "🪚", x: 1300, y: 250, mundo: "Mundo 2: O Salto", idImagem: "serraserraserrador" },
-      { nome: "Joao Ratao", nota: "Mi", icone: "🐭", x: 1500, y: 150, mundo: "Mundo 2: O Salto", idImagem: "joaoratao" },
-      { nome: "Uni, duni, te", nota: "Mi", icone: "🍦", x: 1650, y: 350, mundo: "Mundo 2: O Salto", idImagem: "unidunite" },
-      { nome: "Rei, capitao", nota: "Mi", icone: "👑", x: 1500, y: 500, mundo: "Mundo 2: O Salto", idImagem: "reicapitao" },
-      { nome: "Gatinho Mimi", nota: "Mi", icone: "🐱", x: 1250, y: 600, mundo: "Mundo 2: O Salto", idImagem: "gatinhomimi" },
-      { nome: "Tique, taque", nota: "La", icone: "🌟", x: 1850, y: 450, mundo: "Mundo 3: A Nova Melodia", idImagem: "tiquetaquecarambola" },
-      { nome: "Toque, toque", nota: "La", icone: "🏃", x: 2200, y: 300, mundo: "Mundo 3: A Nova Melodia", idImagem: "toquetoque" },
-      { nome: "Din don", nota: "Fa", icone: "🔔", x: 2500, y: 600, mundo: "Mundo 4: Novos Desafios", idImagem: "dindon" },
-      { nome: "Poc, poc, poc", nota: "Re", icone: "🐎", x: 2600, y: 1100, mundo: "Mundo 4: Novos Desafios", idImagem: "pocpocpoc" },
-      { nome: "O meu relogio", nota: "Re", icone: "⏰", x: 2300, y: 1350, mundo: "Mundo 4: Novos Desafios", idImagem: "omeurelogio" },
-      { nome: "Guten Morgen", nota: "Do G.", icone: "🌄", x: 1950, y: 1400, mundo: "Mundo 5: Os Graves", idImagem: "gutenmorgen" },
-      { nome: "O pastorzinho", nota: "Do G.", icone: "🐑", x: 1650, y: 1450, mundo: "Mundo 5: Os Graves", idImagem: "opastorzinho" },
-      { nome: "Hanschen Klein", nota: "Do G.", icone: "🎶", x: 1450, y: 1200, mundo: "Mundo 5: Os Graves", idImagem: "hanschenklein" },
-      { nome: "Alegria", nota: "Do G.", icone: "✨", x: 1200, y: 1350, mundo: "Mundo 5: Os Graves", idImagem: "alegria" },
-      { nome: "Os tres patinhos", nota: "Si", icone: "🦆", x: 950, y: 1300, mundo: "Mundo 6: Os Classicos", idImagem: "ostrespatinhos" },
-      { nome: "Cai cai balao", nota: "Si", icone: "🎈", x: 750, y: 1150, mundo: "Mundo 6: Os Classicos", idImagem: "caicaibalao" },
-      { nome: "Que e da Margarida?", nota: "Si", icone: "🌼", x: 600, y: 1400, mundo: "Mundo 6: Os Classicos", idImagem: "queedamargarida" },
-      { nome: "Mary had a lamb", nota: "Si", icone: "🌾", x: 400, y: 1500, mundo: "Mundo 6: Os Classicos", idImagem: "maryhadalittlelamb" },
-      { nome: "Marcha soldado", nota: "Si", icone: "🪖", x: 250, y: 1300, mundo: "Mundo 6: Os Classicos", idImagem: "marchasoldado" },
-      { nome: "Bate o sino", nota: "Si", icone: "🎄", x: 150, y: 1000, mundo: "Mundo 6: Os Classicos", idImagem: "bateosino" }
+      // MUNDO 1: O Despertar (Sol)
+      { nome: "Joao Cacador", nota: "Sol", icone: "🦁", x: 200, y: 400, mundo: "Mundo 1: O Despertar", imagem: "joao cacador.png" },
+      { nome: "Marcelo e a flauta", nota: "Sol", icone: "👦", x: 350, y: 250, mundo: "Mundo 1: O Despertar", imagem: "marcelo e a flauta.png" },
+      { nome: "Cima do piano", nota: "Sol", icone: "🎹", x: 550, y: 350, mundo: "Mundo 1: O Despertar", imagem: "cima do piano.png" },
+      
+      // MUNDO 2: O Salto (Mi)
+      { nome: "O grilo", nota: "Mi", icone: "🦗", x: 850, y: 300, mundo: "Mundo 2: O Salto", imagem: "o grilo.png" },
+      { nome: "Leo e o chapeu", nota: "Mi", icone: "🎩", x: 1050, y: 200, mundo: "Mundo 2: O Salto", imagem: "leo e o chapeu.png" },
+      { nome: "Serra, serrador", nota: "Mi", icone: "🪚", x: 1300, y: 250, mundo: "Mundo 2: O Salto", imagem: "serra serra serrador.png" },
+      { nome: "Joao Ratao", nota: "Mi", icone: "🐭", x: 1500, y: 150, mundo: "Mundo 2: O Salto", imagem: "joao ratao.png" },
+      { nome: "Uni, duni, te", nota: "Mi", icone: "🍦", x: 1650, y: 350, mundo: "Mundo 2: O Salto", imagem: "uni duni te.png" },
+      { nome: "Rei, capitao", nota: "Mi", icone: "👑", x: 1500, y: 500, mundo: "Mundo 2: O Salto", imagem: "rei capitao.png" },
+      { nome: "Gatinho Mimi", nota: "Mi", icone: "🐱", x: 1250, y: 600, mundo: "Mundo 2: O Salto", imagem: "gatinho mimi.png" },
+      
+      // MUNDO 3: A Nova Melodia (Lá)
+      { nome: "Tique, taque", nota: "La", icone: "🌟", x: 1850, y: 450, mundo: "Mundo 3: A Nova Melodia", imagem: "tique taque carambola.png" },
+      { nome: "Toque, toque", nota: "La", icone: "🏃", x: 2200, y: 300, mundo: "Mundo 3: A Nova Melodia", imagem: "toque toque.png" },
+      
+      // MUNDO 4: Novos Desafios (Fá e Ré)
+      { nome: "Din don", nota: "Fa", icone: "🔔", x: 2500, y: 600, mundo: "Mundo 4: Novos Desafios", imagem: "din don.png" },
+      { nome: "Poc, poc, poc", nota: "Re", icone: "🐎", x: 2600, y: 1100, mundo: "Mundo 4: Novos Desafios", imagem: "poc poc poc.png" },
+      { nome: "O meu relogio", nota: "Re", icone: "⏰", x: 2300, y: 1350, mundo: "Mundo 4: Novos Desafios", imagem: "o meu relogio.png" },
+      
+      // MUNDO 5: Os Graves (Dó Grave)
+      { nome: "Guten Morgen", nota: "Do G.", icone: "🌄", x: 1950, y: 1400, mundo: "Mundo 5: Os Graves", imagem: "guten morgen.png" },
+      { nome: "O pastorzinho", nota: "Do G.", icone: "🐑", x: 1650, y: 1450, mundo: "Mundo 5: Os Graves", imagem: "o pastorzinho.png" },
+      { nome: "Hanschen Klein", nota: "Do G.", icone: "🎶", x: 1450, y: 1200, mundo: "Mundo 5: Os Graves", imagem: "hanschen klein.png" },
+      { nome: "Alegria", nota: "Do G.", icone: "✨", x: 1200, y: 1350, mundo: "Mundo 5: Os Graves", imagem: "alegria.png" },
+      
+      // MUNDO 6: Os Clássicos (Si)
+      { nome: "Os tres patinhos", nota: "Si", icone: "🦆", x: 950, y: 1300, mundo: "Mundo 6: Os Classicos", imagem: "os tres patinhos.png" },
+      { nome: "Cai cai balao", nota: "Si", icone: "🎈", x: 750, y: 1150, mundo: "Mundo 6: Os Classicos", imagem: "cai cai balao.png" },
+      { nome: "Que e da Margarida?", nota: "Si", icone: "🌼", x: 600, y: 1400, mundo: "Mundo 6: Os Classicos", imagem: "que e da margarida.png" },
+      { nome: "Mary had a lamb", nota: "Si", icone: "🌾", x: 400, y: 1500, mundo: "Mundo 6: Os Classicos", imagem: "mary had a little lamb.png" },
+      { nome: "Marcha soldado", nota: "Si", icone: "🪖", x: 250, y: 1300, mundo: "Mundo 6: Os Classicos", imagem: "marcha soldado.png" },
+      { nome: "Bate o sino", nota: "Si", icone: "🎄", x: 150, y: 1000, mundo: "Mundo 6: Os Classicos", imagem: "bate o sino.png" }
     ];
 
     let progressoMaximo = 0; 
     let faseSelecionada = 0; 
     let coracoes = 3;
 
-    window.onload = renderizarMapaCompleto;
+    window.onload = function() {
+      renderizarMapaCompleto();
+      configurarArrastoMapa();
+    };
 
     function renderizarMapaCompleto() {
       const container = document.getElementById("nodos-container");
@@ -316,17 +295,17 @@
         } else {
           nodo.onclick = () => {
             faseSelecionada = idx;
-            atualizarAvatarHUD();
+            atualizarAvatarHUD(false); 
             abrirBatalha(fase, idx);
           };
         }
         container.appendChild(nodo);
       });
 
-      atualizarAvatarHUD();
+      atualizarAvatarHUD(true);
     }
 
-    function atualizarAvatarHUD() {
+    function atualizarAvatarHUD(deveFocar) {
       const faseAtual = todasFases[faseSelecionada];
       const avatar = document.getElementById("avatar-jogador");
       const viewport = document.getElementById("viewport");
@@ -346,13 +325,42 @@
       const numeroDaFase = faseSelecionada + 1;
       document.getElementById("tela-projetor").className = (numeroDaFase % 2 === 0) ? "modo-azul" : "modo-padrao";
 
-      try {
+      if (deveFocar) {
         viewport.scrollTo({
           left: faseAtual.x - (viewport.offsetWidth / 2),
           top: faseAtual.y - (viewport.offsetHeight / 2),
           behavior: 'smooth'
         });
-      } catch (e) {}
+      }
+    }
+
+    function configurarArrastoMapa() {
+      const viewport = document.getElementById("viewport");
+      let arrastando = false;
+      let startX, startY, scrollLeft, scrollTop;
+
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.fase-nodo')) return;
+        arrastando = true;
+        startX = e.pageX - viewport.offsetLeft;
+        startY = e.pageY - viewport.offsetTop;
+        scrollLeft = viewport.scrollLeft;
+        scrollTop = viewport.scrollTop;
+      });
+
+      viewport.addEventListener('mouseleave', () => { arrastando = false; });
+      viewport.addEventListener('mouseup', () => { arrastando = false; });
+
+      viewport.addEventListener('mousemove', (e) => {
+        if (!arrastando) return;
+        e.preventDefault();
+        const x = e.pageX - viewport.offsetLeft;
+        const y = e.pageY - viewport.offsetTop;
+        const andarX = (x - startX) * 1.5; 
+        const andarY = (y - startY) * 1.5;
+        viewport.scrollLeft = scrollLeft - andarX;
+        viewport.scrollTop = scrollTop - andarY;
+      });
     }
 
     window.addEventListener('keydown', (e) => {
@@ -362,13 +370,13 @@
         e.preventDefault(); 
         if (faseSelecionada < progressoMaximo) {
           faseSelecionada++;
-          atualizarAvatarHUD();
+          atualizarAvatarHUD(true);
         }
       } else if (["ArrowLeft", "ArrowDown"].includes(e.key)) {
         e.preventDefault();
         if (faseSelecionada > 0) {
           faseSelecionada--;
-          atualizarAvatarHUD();
+          atualizarAvatarHUD(true);
         }
       } else if (e.key === "Enter") {
         e.preventDefault();
@@ -389,21 +397,7 @@
 
     function abrirBatalha(fase, idx) {
       document.getElementById("batalha-titulo").innerText = `FASE ${idx + 1}: ${fase.nome}`;
-      
-      const imgElement = document.getElementById("imagem-fase");
-      const textoAviso = document.getElementById("texto-aviso-imagem");
-
-      // O jogo procura se você fez o upload da imagem correspondente a esta fase
-      if (imagensMemoria[fase.idImagem]) {
-        imgElement.src = imagensMemoria[fase.idImagem];
-        imgElement.style.display = "block";
-        textoAviso.style.display = "none";
-      } else {
-        // Se a imagem não foi carregada no botão azul, mostra o aviso!
-        imgElement.style.display = "none";
-        textoAviso.style.display = "block";
-      }
-      
+      document.getElementById("imagem-fase").src = fase.imagem;
       document.getElementById("modal-batalha").classList.add("aberto");
     }
 
@@ -413,7 +407,6 @@
 
     function mestreComputarErro() {
       coracoes--;
-      
       if (coracoes <= 0) {
         document.getElementById("modal-batalha").classList.remove("aberto");
         progressoMaximo = Math.max(0, progressoMaximo - 2);
@@ -428,7 +421,6 @@
 
     function mestreComputarVitoria() {
       document.getElementById("modal-batalha").classList.remove("aberto");
-      
       if (faseSelecionada === progressoMaximo) {
         if (progressoMaximo < todasFases.length - 1) {
           progressoMaximo++;
@@ -440,7 +432,7 @@
         }
       } else {
         faseSelecionada++;
-        atualizarAvatarHUD();
+        atualizarAvatarHUD(true);
       }
     }
   </script>
